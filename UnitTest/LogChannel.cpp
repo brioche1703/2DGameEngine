@@ -2,6 +2,7 @@
 
 #include "Core/src/log/EntryBuilder.h"
 #include "Core/src/log/Channel.h"
+#include "Core/src/log/Driver.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace engine;
@@ -10,14 +11,13 @@ using namespace std::string_literals;
 
 #define engineLog log::EntryBuilder{ __FILEW__, __FUNCTIONW__, __LINE__}
 
-class MockChannel : public log::IChannel
+class MockDriver : public log::IDriver
 {
 public:
-	void Submit(log::Entry& e) override
+	void Submit(const log::Entry& e) override
 	{
 		entry_ = e;
 	}
-	void AttachDriver(std::shared_ptr<log::IDriver>) override {}
 
 	log::Entry entry_;
 };
@@ -31,23 +31,21 @@ Microsoft::VisualStudio::CppUnitTestFramework::
 
 namespace Log
 {
-	TEST_CLASS(LogTests)
+	TEST_CLASS(LogChannelTests)
 	{
 	public:
-		TEST_METHOD(ShowOffFluent)
+		TEST_METHOD(TestForwarding)
 		{
-			MockChannel chan;
-			engineLog.level(log::Level::Info).note(L"HI").chan(&chan);
-			Assert::AreEqual(L"HI"s, chan.entry_.note_);
-			Assert::AreEqual(log::Level::Info, chan.entry_.level_); 
-		}
-
-		TEST_METHOD(SimplifiedLevelNote)
-		{
-			MockChannel chan;
+			log::Channel chan;
+			auto pDriver1 = std::make_shared<MockDriver>();
+			auto pDriver2 = std::make_shared<MockDriver>();
+			chan.AttachDriver(pDriver1);
+			chan.AttachDriver(pDriver2);
 			engineLog.info(L"HI").chan(&chan);
-			Assert::AreEqual(L"HI"s, chan.entry_.note_);
-			Assert::AreEqual(log::Level::Info, chan.entry_.level_);
+			Assert::AreEqual(L"HI"s, pDriver1->entry_.note_);
+			Assert::AreEqual(log::Level::Info, pDriver1->entry_.level_); 
+			Assert::AreEqual(L"HI"s, pDriver2->entry_.note_);
+			Assert::AreEqual(log::Level::Info, pDriver2->entry_.level_); 
 		}
 	};
 }

@@ -1,22 +1,21 @@
-#include <iostream>
-#include <Core/src/ioc/Container.h>
-
-struct Base 
-{
-	virtual int Test() { return 420; }
-	virtual ~Base() = default;
-};
-
-struct Derived : public Base
-{
-	int Test() override { return 69; }
-};
-
-int main()
-{
-	using namespace engine;
-
-	ioc::Get().Register<Base>([] {return std::make_shared<Derived>(); });
-
-	std::cout << ioc::Get().Resolve<Base>()->Test() << std::endl;
+#include <iostream> 
+#include <Core/src/log/EntryBuilder.h> 
+#include <Core/src/log/Channel.h> 
+#include <Core/src/log/MsvcDebugDriver.h> 
+#include <Core/src/log/TextFormatter.h> 
+ 
+ 
+using namespace engine; 
+using namespace std::string_literals; 
+ 
+#define chilog log::EntryBuilder{ __FILEW__, __FUNCTIONW__, __LINE__ }.chan(pChan.get()) 
+ 
+int main() 
+{ 
+	std::unique_ptr<log::IChannel> pChan = std::make_unique<log::Channel>(std::vector<std::shared_ptr<log::IDriver>>{ 
+		std::make_shared<log::MsvcDebugDriver>(std::make_unique<log::TextFormatter>()) 
+	}); 
+	chilog.fatal(L"Oh noes!"); 
+ 
+	return 0; 
 }

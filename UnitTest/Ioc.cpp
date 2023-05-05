@@ -17,7 +17,7 @@ struct Derived : public Base
 
 using namespace engine;
 
-namespace Infrastructure
+namespace Ioc
 {
 	TEST_CLASS(IocTests)
 	{
